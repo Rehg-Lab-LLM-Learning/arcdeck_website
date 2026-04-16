@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArcDeck — Narrative-Driven Paper-to-Slide Generation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css" />
+  <link rel="icon" type="image/png" href="assets/icon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #09090b;
+      --bg-2:     #0f0f13;
+      --surface:  #141419;
+      --border:   rgba(255,255,255,.07);
+      --border-2: rgba(255,255,255,.12);
+      --ink:      #f0f0f5;
+      --ink-2:    #9898ad;
+      --ink-3:    #5c5c72;
+      --accent:   #2563eb;
+      --accent-2: #60a5fa;
+      --radius:   14px;
+      --shadow:   0 4px 24px rgba(0,0,0,.35);
+      --nav-bg:   rgba(9,9,11,.88);
+      --hero-grad-1: rgba(37,99,235,.1);
+      --hero-grad-2: rgba(56,189,248,.06);
+      --hero-title: #ffffff;
+      --video-bg:  #000000;
+      --carousel-bg:#08081a;
+      --overlay-bg: rgba(10,10,18,.7);
+      --modal-bg: rgba(5,5,10,.94);
+    }
+
+    body.light-mode {
+      --bg:       #f8fafc;
+      --bg-2:     #eef2f7;
+      --surface:  #ffffff;
+      --border:   rgba(15,23,42,.08);
+      --border-2: rgba(15,23,42,.14);
+      --ink:      #0f172a;
+      --ink-2:    #334155;
+      --ink-3:    #64748b;
+      --accent:   #2563eb;
+      --accent-2: #1d4ed8;
+      --shadow:   0 10px 30px rgba(15,23,42,.08);
+      --nav-bg:   rgba(248,250,252,.88);
+      --hero-grad-1: rgba(37,99,235,.08);
+      --hero-grad-2: rgba(14,165,233,.08);
+      --hero-title: #0f172a;
+      --video-bg:  #dfe7f1;
+      --carousel-bg:#eef2f7;
+      --overlay-bg: rgba(255,255,255,.82);
+      --modal-bg: rgba(241,245,249,.92);
+    }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color .25s ease, color .25s ease;
+    }
+    a { color: var(--accent-2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .theme-toggle {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-2);
+      background: rgba(255,255,255,.04);
+      color: var(--ink-2);
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all .2s ease;
+    }
+    .theme-toggle:hover {
+      color: var(--ink);
+      text-decoration: none;
+      background: rgba(37,99,235,.10);
+      border-color: rgba(37,99,235,.28);
+    }
+    body.light-mode .theme-toggle {
+      background: rgba(15,23,42,.03);
+    }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 8px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .nav-inner::-webkit-scrollbar { display: none; }
+    .nav-logo {
+      height: 26px; margin-right: 12px; flex-shrink: 0;
+      filter: brightness(1.3);
+      vertical-align: middle;
+      display: block;
+    }
+    body.light-mode .nav-logo,
+    body.light-mode .hero-logo {
+      filter: none;
+    }
+    .nav-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 14px 12px;
+      font-size: .78rem; font-weight: 600;
+      color: var(--ink-3);
+      white-space: nowrap; text-decoration: none;
+      transition: color .2s;
+      flex-shrink: 0;
+    }
+    .nav-link:hover { color: var(--ink); text-decoration: none; }
+
+    .hero {
+      position: relative;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 48px 48px 64px;
+      background:
+        radial-gradient(ellipse at 30% 30%, var(--hero-grad-1) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 70%, var(--hero-grad-2) 0%, transparent 50%),
+        var(--bg);
+    }
+    .hero-inner {
+      max-width: 1200px; width: 100%;
+    }
+    .hero-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 24px; margin-bottom: 32px;
+    }
+    .hero-logo {
+      height: 100px; flex-shrink: 0;
+      filter: brightness(1.4);
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      font-weight: 900; letter-spacing: -.04em; line-height: 1.08;
+      color: var(--hero-title);
+    }
+    .hero h1 .hl {
+      background: linear-gradient(135deg, #60a5fa, #93c5fd, #38bdf8);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-meta {
+      display: flex; flex-wrap: wrap; align-items: baseline;
+      gap: 6px 20px; margin-top: 14px;
+    }
+    .hero-bottom {
+      display: grid;
+      grid-template-columns: 0.35fr 1.15fr;
+      gap: 36px;
+      align-items: center;
+    }
+    .hero .tagline {
+      font-size: 1rem; color: var(--ink-2);
+      line-height: 1.7; margin-bottom: 0;
+      text-align: justify;
+    }
+    .hero-authors {
+      display: flex; flex-wrap: wrap; gap: 4px 12px;
+      margin-bottom: 10px;
+    }
+    .hero-authors .author {
+      font-size: .82rem; font-weight: 600; color: var(--ink);
+    }
+    .hero-authors .author sup { color: var(--accent-2); font-size: .6rem; margin-left: 1px; }
+    .hero-affil { font-size: .76rem; color: var(--ink-3); line-height: 1.7; margin-bottom: 4px; }
+    .hero-affil sup { color: var(--accent-2); }
+    .hero-equal { font-size: .7rem; color: var(--ink-3); opacity: .8; }
+    .hero-links {
+      display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+    }
+    .hero-link {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 18px; border-radius: 10px;
+      min-width: 120px;
+      font-size: .82rem; font-weight: 700;
+      border: 1.5px solid var(--border-2);
+      color: var(--ink-2); background: rgba(255,255,255,.04);
+      backdrop-filter: blur(8px);
+      transition: all .2s; text-decoration: none;
+    }
+    body.light-mode .hero-link {
+      background: rgba(255,255,255,.7);
+    }
+    .hero-link:hover {
+      background: rgba(37,99,235,.15); border-color: rgba(37,99,235,.4);
+      color: var(--ink); transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(37,99,235,.2);
+      text-decoration: none;
+    }
+    .hero-link i { width: 16px; text-align: center; }
+
+    .video-wrap {
+      position: relative; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 16px 48px rgba(0,0,0,.18), 0 0 80px rgba(37,99,235,.06);
+      background: var(--video-bg);
+    }
+    body.light-mode .video-wrap {
+      border-color: rgba(15,23,42,.08);
+    }
+    .video-wrap video { width: 100%; display: block; }
+    .video-label {
+      position: absolute; top: 12px; left: 12px; z-index: 2;
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 7px;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: .68rem; font-weight: 700; color: #fff;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .video-label .dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #ef4444; animation: blink 1.5s ease-in-out infinite;
+    }
+
+    .section { max-width: 1200px; margin: 0 auto; padding: 72px 48px; }
+    .section-alt { background: var(--bg-2); }
+    .section-sep { height: 1px; background: linear-gradient(90deg, transparent, rgba(37,99,235,.25), transparent); }
+
+    .section-head { margin-bottom: 32px; }
+    .section-head h2 {
+      font-size: 1.8rem; font-weight: 800; letter-spacing: -.03em;
+      line-height: 1.15; color: var(--ink);
+    }
+    .section-head p {
+      font-size: .88rem; color: var(--ink-3); margin-top: 6px; max-width: 1100px;
+    }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      margin-bottom: 20px; overflow: hidden;
+      transition: border-color .3s, background-color .25s ease;
+    }
+    .card:hover { border-color: rgba(37,99,235,.18); }
+    .card-body { padding: 16px 18px 18px; }
+
+    .tab-bar {
+      display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .tab-btn {
+      padding: 7px 16px; border-radius: 8px; font-size: .78rem; font-weight: 600;
+      border: 1.5px solid transparent; cursor: pointer; transition: all .2s;
+      background: rgba(255,255,255,.04); color: var(--ink-2);
+    }
+    body.light-mode .tab-btn {
+      background: rgba(15,23,42,.04);
+    }
+    .tab-btn:hover { background: rgba(255,255,255,.08); color: var(--ink); }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 3px 14px rgba(37,99,235,.3); }
+    .tab-btn.active.ours-tab  { background: #f59e0b; border-color: #f59e0b; box-shadow: 0 3px 14px rgba(245,158,11,.3); }
+    .tab-btn.active.qwen-tab  { background: #7c3aed; border-color: #7c3aed; box-shadow: 0 3px 14px rgba(124,58,237,.3); }
+    .tab-btn.active.gpt5-tab  { background: #059669; border-color: #059669; box-shadow: 0 3px 14px rgba(5,150,105,.3); }
+    .tab-btn.active.gpt4-tab  { background: #1d4ed8; border-color: #1d4ed8; box-shadow: 0 3px 14px rgba(29,78,216,.3); }
+    .tab-btn.active.pptx-tab  { background: #0369a1; border-color: #0369a1; box-shadow: 0 3px 14px rgba(3,105,161,.3); }
+    .tab-btn.active.latex-tab { background: #b45309; border-color: #b45309; box-shadow: 0 3px 14px rgba(180,83,9,.3); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    .pill-tabs {
+      display: inline-flex; gap: 4px; flex-wrap: wrap;
+      background: rgba(20,20,25,.9); border: 1px solid rgba(37,99,235,.12);
+      border-radius: 10px; padding: 6px 10px; margin-bottom: 14px;
+    }
+    body.light-mode .pill-tabs {
+      background: rgba(255,255,255,.8);
+    }
+    .pill-tabs .tab-btn {
+      border-radius: 20px; font-size: .74rem; font-weight: 700;
+      color: rgba(255,255,255,.4); background: transparent; border-color: transparent;
+    }
+    body.light-mode .pill-tabs .tab-btn {
+      color: rgba(15,23,42,.5);
+    }
+    .pill-tabs .tab-btn:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); border-color: transparent; }
+    body.light-mode .pill-tabs .tab-btn:hover { color: var(--ink); }
+    .pill-tabs .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+
+    .label {
+      font-size: .65rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
+      display: inline-block; margin-bottom: 7px;
+    }
+    .label-blue   { background: rgba(3,105,161,.15);  color: #7dd3fc; }
+    .label-amber  { background: rgba(245,158,11,.15); color: #fbbf24; }
+    .label-green  { background: rgba(5,150,105,.15);  color: #6ee7b7; }
+    .label-violet { background: rgba(91,33,182,.15);  color: #c4b5fd; }
+    .label-pink   { background: rgba(190,24,93,.15);  color: #f9a8d4; }
+    .label-indigo { background: rgba(29,78,216,.15);  color: #93c5fd; }
+    .label-muted  { background: rgba(255,255,255,.06); color: var(--ink-3); }
+    body.light-mode .label-muted { background: rgba(15,23,42,.05); }
+
+    .slide-carousel {
+      position: relative; width: 100%;
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--carousel-bg); user-select: none;
+    }
+    .slide-carousel .slide-img-wrap {
+      position: relative; width: 100%;
+      aspect-ratio: 16/9;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--carousel-bg); overflow: hidden;
+    }
+    .slide-carousel .slide-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+      transition: opacity .2s;
+    }
+    .slide-carousel .slide-img-wrap img.loading { opacity: 0; }
+    .slide-nav {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 7px 10px;
+      background: rgba(8,8,26,.95);
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    body.light-mode .slide-nav,
+    body.light-mode .slide-modal-nav {
+      background: rgba(255,255,255,.92);
+      border-top-color: rgba(15,23,42,.06);
+    }
+    .slide-nav button {
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 7px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.7); cursor: pointer; transition: all .15s;
+      font-size: .85rem;
+    }
+    body.light-mode .slide-nav button,
+    body.light-mode .slide-modal-nav button,
+    body.light-mode .slide-modal-close {
+      background: rgba(15,23,42,.05);
+      border-color: rgba(15,23,42,.08);
+      color: var(--ink-2);
+    }
+    .slide-nav button:hover:not(:disabled) {
+      background: rgba(37,99,235,.4); border-color: rgba(37,99,235,.5); color: #fff;
+    }
+    .slide-nav button:disabled { opacity: .25; cursor: default; }
+    .slide-nav .slide-counter {
+      font-size: .7rem; font-weight: 700;
+      color: rgba(255,255,255,.45); letter-spacing: .04em;
+      min-width: 55px; text-align: center;
+    }
+    body.light-mode .slide-nav .slide-counter,
+    body.light-mode .slide-modal-nav .modal-counter {
+      color: var(--ink-3);
+    }
+    .slide-nav .slide-counter .current-num { color: #fff; font-size: .78rem; }
+    body.light-mode .slide-nav .slide-counter .current-num,
+    body.light-mode .slide-modal-nav .modal-counter .current-num {
+      color: var(--ink);
+    }
+    .slide-progress {
+      position: absolute; bottom: 0; left: 0;
+      height: 2px; background: var(--accent);
+      transition: width .2s; z-index: 2;
+      box-shadow: 0 0 6px rgba(37,99,235,.5);
+    }
+    .slide-carousel .expand-btn {
+      position: absolute; top: 8px; right: 8px; z-index: 10;
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 9px; border-radius: 7px;
+      background: var(--overlay-bg); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.7); font-size: .68rem; font-weight: 600;
+      cursor: pointer; opacity: 0; transition: all .2s;
+    }
+    body.light-mode .slide-carousel .expand-btn {
+      border-color: rgba(15,23,42,.08);
+      color: var(--ink-2);
+    }
+    .slide-carousel:hover .expand-btn { opacity: 1; }
+    .slide-carousel .expand-btn svg { width: 11px; height: 11px; }
+    .slide-carousel .expand-btn:hover { background: rgba(37,99,235,.7); color: #fff; }
+
+    .slide-modal {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: var(--modal-bg); backdrop-filter: blur(20px);
+      align-items: center; justify-content: center;
+      padding: 24px; flex-direction: column;
+    }
+    .slide-modal.open { display: flex; }
+    .slide-modal-content {
+      position: relative; max-width: 1100px; width: 100%;
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      background: var(--carousel-bg);
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    body.light-mode .slide-modal-content {
+      border-color: rgba(15,23,42,.08);
+    }
+    .slide-modal-content img { width: 100%; display: block; }
+    .slide-modal-nav {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; padding: 12px;
+      background: rgba(8,8,26,.95);
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    .slide-modal-nav button {
+      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 9px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,255,255,.8); cursor: pointer; transition: all .15s; font-size: 1rem;
+    }
+    .slide-modal-nav button:hover:not(:disabled) {
+      background: rgba(37,99,235,.4); color: #fff;
+    }
+    .slide-modal-nav button:disabled { opacity: .25; cursor: default; }
+    .slide-modal-nav .modal-counter {
+      font-size: .82rem; font-weight: 700; color: rgba(255,255,255,.45);
+      min-width: 70px; text-align: center;
+    }
+    .slide-modal-nav .modal-counter .current-num { color: #fff; font-size: .95rem; }
+    .slide-modal-close {
+      position: absolute; top: 12px; right: 12px; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 9px;
+      background: rgba(10,10,18,.8); border: 1px solid rgba(255,255,255,.1);
+      color: #fff; font-size: 1.1rem; cursor: pointer; transition: all .2s;
+    }
+    .slide-modal-close:hover { background: rgba(220,38,38,.7); color: #fff; }
+    .modal-progress {
+      position: absolute; bottom: 0; left: 0;
+      height: 3px; background: var(--accent);
+      transition: width .2s; z-index: 2;
+    }
+
+    .overview-img { width: 100%; display: block; }
+
+    .features {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+      margin-top: 40px;
+    }
+    .feature {
+      padding: 20px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      transition: border-color .3s;
+    }
+    .feature:hover { border-color: rgba(37,99,235,.18); }
+    .feature-icon {
+      font-size: 1.3rem; margin-bottom: 10px; color: var(--accent-2);
+    }
+    .feature h3 { font-size: .92rem; font-weight: 700; margin-bottom: 4px; }
+    .feature p { font-size: .8rem; color: var(--ink-3); line-height: 1.5; }
+
+    .cite-pre {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      font-family: 'SF Mono',Menlo,Consolas,monospace;
+      font-size: .78rem; line-height: 1.7; color: var(--ink-2);
+      overflow-x: auto; white-space: pre; margin: 0;
+      position: relative;
+    }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      padding: 5px 11px; border-radius: 7px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.5); font-size: .7rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    body.light-mode .copy-btn {
+      background: rgba(15,23,42,.05);
+      border-color: rgba(15,23,42,.08);
+      color: var(--ink-3);
+    }
+    .copy-btn:hover { background: rgba(37,99,235,.3); color: #fff; }
+
+    footer {
+      background: var(--bg); border-top: 1px solid var(--border);
+      color: var(--ink-3); text-align: center;
+      padding: 40px 24px; font-size: .78rem;
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1000px) {
+      .features { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 900px) {
+      .hero-bottom { grid-template-columns: 1fr; gap: 28px; }
+    }
+    @media (max-width: 700px) {
+      .hero-top { flex-direction: column-reverse; align-items: center; text-align: center; }
+      .hero-logo { height: 72px; }
+      .hero-authors, .hero-links { justify-content: center; }
+      .hero .tagline { text-align: center; }
+      .hero-affil { text-align: center; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .section { padding: 48px 20px; }
+      .hero { padding: 80px 20px 50px; }
+      .hero h1 { font-size: 1.8rem; }
+      .theme-toggle {
+        margin-left: 8px;
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" style="display:flex;align-items:center;flex-shrink:0;"><img src="assets/logo.png" alt="ArcDeck" class="nav-logo" /></a>
+    <a class="nav-link" href="#overview">Overview</a>
+    <a class="nav-link" href="#comparisons">Flexible Rendering</a>
+    <a class="nav-link" href="#claude-skill">Claude Skill</a>
+    <a class="nav-link" href="#customize">Tailored Duration & Audience</a>
+    <a class="nav-link" href="#any-field">Any Research Field</a>
+    <a class="nav-link" href="#citation">Citation</a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme">
+      <i class="fa-solid fa-moon"></i>
+      <span id="themeToggleText">Light mode</span>
+    </button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div>
+        <h1>Narrative-Driven Paper-to-Slide<br>Generation via <span class="hl">ArcDeck</span></h1>
+        <div class="hero-meta">
+          <div class="hero-authors">
+            <span class="author">Tarik Can Ozden<sup>*1</sup></span>
+            <span class="author">Sachidanand VS<sup>*1</sup></span>
+            <span class="author">Furkan Horoz<sup>*1,2</sup></span>
+            <span class="author">Ozgur Kara<sup>1</sup></span>
+            <span class="author">Junho Kim<sup>1</sup></span>
+            <span class="author">James M. Rehg<sup>1</sup></span>
+          </div>
+        </div>
+        <div class="hero-affil">
+          <sup>1</sup> University of Illinois Urbana-Champaign &nbsp;
+          <sup>2</sup> Middle East Technical University
+          &nbsp;&middot;&nbsp; <span class="hero-equal"><sup>*</sup> Equal contribution</span>
+        </div>
+        <div class="hero-links">
+          <a class="hero-link" href="https://arxiv.org/abs/2604.11969" target="_blank"><i class="ai ai-arxiv" style="font-size:1.1rem;"></i> arXiv</a>
+          <a class="hero-link" href="https://github.com/RehgLab/ArcDeck" target="_blank"><i class="fa-brands fa-github" style="font-size:1rem;"></i> GitHub</a>
+          <a class="hero-link" href="https://huggingface.co/datasets/ArcDeck/ArcBench" target="_blank"><img src="assets/hf-logo.svg" alt="HF" style="width:18px;height:18px;"> Dataset</a>
+          <a class="hero-link" href="#overview"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Explore</a>
+        </div>
+      </div>
+      <img src="assets/logo.png" alt="ArcDeck" class="hero-logo" />
+    </div>
+    <div class="hero-bottom">
+      <div>
+        <p class="tagline">Turn any paper into a presentation with a clear, compelling narrative. Choose the duration, pick the audience, and generate with your preferred LLM model in one of 15 themes.</p>
+      </div>
+      <div class="video-wrap">
+        <div class="video-label"><span class="dot"></span> Demo</div>
+        <video controls autoplay muted loop playsinline>
+          <source src="assets/demo.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="section-sep"></div>
+
+<section id="overview">
+<div class="section">
+  <div class="reveal">
+    <div class="section-head">
+      <h2>How ArcDeck works</h2>
+      <p>Paper in, slides out — in three steps.</p>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="reveal" style="max-width:1200px;margin:0 auto;">
+    <img src="assets/overview.png" alt="ArcDeck pipeline overview" class="overview-img" id="overviewImage" data-dark-src="assets/overview.png" data-light-src="assets/overview_light.png" />
+  </div>
+</div>
+<div class="section" style="padding-top:40px;">
+
+  <div class="reveal features">
+    <div class="feature">
+      <div class="feature-icon"><i class="fa-solid fa-book-open"></i></div>
+      <h3>Captures narrative</h3>
+      <p>Parses your paper's rhetorical structure to capture how the argument flows — not just what it says.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
+      <h3>Adapts to your needs</h3>
+      <p>5-minute lightning talk or 20-minute deep dive. General audience, expert researchers or any other audience. You choose.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon"><i class="fa-solid fa-globe"></i></div>
+      <h3>Works on any paper</h3>
+      <p>Biology, chemistry, physics, social sciences — not limited to ML/AI. Zero domain-specific tuning needed.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="section-sep"></div>
+
+<section id="comparisons">
+<div class="section">
+  <div class="reveal">
+    <div class="section-head">
+      <h2>Any LLM model, rendered your way</h2>
+      <p>Choose your LLM model, and render to PPTX, LaTeX, or JS.</p>
+    </div>
+  </div>
+
+  <div class="reveal" style="transition-delay:.12s;margin-top:40px;">
+    <span class="label label-muted" style="margin-bottom:12px;">Rendering Pipeline</span>
+    <div class="tab-bar" style="margin-bottom:14px;">
+      <button class="tab-btn active qwen-tab" onclick="switchTab('rp','js',this)">JS</button>
+      <button class="tab-btn latex-tab" onclick="switchTab('rp','latex',this)">LaTeX</button>
+    </div>
+
+    <div id="rp-js" class="tab-pane active">
+      <div class="card"><div class="card-body">
+        <div class="grid-2">
+          <div><div class="slide-carousel" data-pdf="pdfs/pptxjs/ext_js_magr.pdf" data-pages="19"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/pptxjs/ext_js_ex03.pdf" data-pages="16"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt5js_s01.pdf" data-pages="18"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/pptxjs/ext_js_coinstruct.pdf" data-pages="20"></div></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div id="rp-latex" class="tab-pane">
+    <div class="card"><div class="card-body">
+      <div class="grid-2">
+        <div><div class="slide-carousel" data-pdf="pdfs/pptxjs/ext_ours_latex_ex02.pdf" data-pages="19"></div></div>
+        <div><div class="slide-carousel" data-pdf="pdfs/pptxjs/ext_latex_result_ex01.pdf" data-pages="16"></div></div>
+        <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt5latex_s01.pdf" data-pages="18"></div></div>
+        <div><div class="slide-carousel" data-pdf="pdfs/pptxjs/ext_ours_latex_ex01.pdf" data-pages="20"></div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="reveal" style="transition-delay:.08s;">
+    <span class="label label-muted" style="margin-bottom:12px;">LLM Backbone</span>
+    <div class="tab-bar" style="margin-bottom:14px;">
+      <button class="tab-btn active gpt5-tab" onclick="switchTab('qr','gpt5',this)">GPT-5</button>
+      <button class="tab-btn qwen-tab" onclick="switchTab('qr','qwen3',this)">Qwen3</button>
+      <button class="tab-btn gpt4-tab" onclick="switchTab('qr','gpt4o',this)">GPT-4o</button>
+    </div>
+
+    <div id="qr-gpt5" class="tab-pane active">
+      <div class="card"><div class="card-body">
+        <div class="grid-3">
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt5_result_ex01.pdf" data-pages="16"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt5_result_ex02.pdf" data-pages="17"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt5_s01.pdf" data-pages="18"></div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div id="qr-qwen3" class="tab-pane">
+      <div class="card"><div class="card-body">
+        <div class="grid-3">
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_qwen3_result_ex01.pdf" data-pages="13"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_qwen3_result_ex02.pdf" data-pages="16"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_qwen3_s01.pdf" data-pages="21"></div></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div id="qr-gpt4o" class="tab-pane">
+      <div class="card"><div class="card-body">
+        <div class="grid-3">
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt4o_result_ex01.pdf" data-pages="14"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt4o_result_ex02.pdf" data-pages="16"></div></div>
+          <div><div class="slide-carousel" data-pdf="pdfs/qualitative/qual_gpt4o_s01.pdf" data-pages="17"></div></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="section-sep"></div>
+
+<section id="claude-skill">
+  <div class="section">
+    <div class="reveal">
+      <div class="section-head">
+        <h2>ArcDeck as Claude Skill</h2>
+        <p>Use ArcDeck directly as a Claude Skill with a single command. Compared with native Claude workflows, ArcDeck delivers stronger narrative flow and richer paper-grounded slides by incorporating figures and tables directly from the source paper.</p>
+      </div>
+    </div>
+  
+    <div class="reveal" style="transition-delay:.08s;">
+      <div class="card"><div class="card-body">
+        <div class="grid-2">
+          <div>
+            <span class="label label-indigo">ArcDeck Skill</span>
+            <div class="slide-carousel" data-pdf="pdfs/claude/arcdeck_claude.pdf" data-pages="22"></div>
+          </div>
+          <div>
+            <span class="label label-amber">Claude Native</span>
+            <div class="slide-carousel" data-pdf="pdfs/claude/claude_native_generation.pdf" data-pages="14"></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  </section>
+  
+  <div class="section-sep"></div>
+
+<section id="customize">
+<div class="section-alt">
+<div class="section">
+  <div class="reveal">
+    <div class="section-head">
+      <h2>Customizable duration and audience</h2>
+      <p>5-minute lightning talk or 20-minute deep dive. General public, expert researchers or any audience.</p>
+    </div>
+  </div>
+
+  <div class="reveal" style="transition-delay:.08s;">
+    <span class="label label-muted" style="margin-bottom:12px;">Duration</span>
+    <div class="card" style="margin-bottom:24px;"><div class="card-body">
+      <div class="grid-4">
+        <div><span class="label label-blue">5 min</span>
+          <div class="slide-carousel" data-pdf="pdfs/durations/dur_5min.pdf" data-pages="10"></div></div>
+        <div><span class="label label-amber">10 min</span>
+          <div class="slide-carousel" data-pdf="pdfs/durations/dur_10min.pdf" data-pages="14"></div></div>
+        <div><span class="label label-green">15 min</span>
+          <div class="slide-carousel" data-pdf="pdfs/durations/dur_15min.pdf" data-pages="15"></div></div>
+        <div><span class="label label-violet">20 min</span>
+          <div class="slide-carousel" data-pdf="pdfs/durations/dur_20min.pdf" data-pages="18"></div></div>
+      </div>
+    </div></div>
+
+    <span class="label label-muted" style="margin-bottom:12px;">Audience</span>
+    <div class="card"><div class="card-body">
+      <div class="grid-2">
+        <div><span class="label label-pink">General Public</span>
+          <div class="slide-carousel" data-pdf="pdfs/durations/audience_public.pdf" data-pages="11"></div></div>
+        <div><span class="label label-indigo">Researcher</span>
+          <div class="slide-carousel" data-pdf="pdfs/durations/audience_researcher.pdf" data-pages="11"></div></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+</div>
+</section>
+
+<div class="section-sep"></div>
+
+<section id="any-field">
+<div class="section-alt">
+<div class="section">
+  <div class="reveal">
+    <div class="section-head">
+      <h2>Beyond ML/AI — any research field</h2>
+      <p>Biology, chemistry, social sciences, and more — no domain-specific tuning needed.</p>
+    </div>
+  </div>
+
+  <div class="reveal" style="transition-delay:.08s;">
+    <div class="card"><div class="card-body">
+      <div class="grid-2">
+        <div><div class="slide-carousel" data-pdf="pdfs/ood/ood_result_ex01.pdf" data-pages="10"></div></div>
+        <div><div class="slide-carousel" data-pdf="pdfs/ood/ood_result_ex02.pdf" data-pages="18"></div></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+</div>
+</section>
+
+<div class="section-sep"></div>
+
+<section id="citation">
+<div class="section" style="max-width:800px;">
+  <div class="reveal">
+    <div class="section-head">
+      <h2>Citation</h2>
+    </div>
+    <div style="position:relative;">
+      <pre class="cite-pre" id="bibtexCode">@article{ozden2026arcdeck,
+  title     = {Narrative-Driven Paper-to-Slide Generation via ArcDeck},
+  author    = {Ozden, Tarik Can and VS, Sachidanand and Horoz, Furkan
+               and Kara, Ozgur and Kim, Junho and Rehg, James M.},
+  journal   = {arXiv preprint arXiv:2604.11969},
+  year      = {2026}
+}</pre>
+      <button class="copy-btn" onclick="copyBibtex()"><i class="fa-regular fa-copy"></i> Copy</button>
+    </div>
+  </div>
+</div>
+</section>
+
+<footer>
+  <p style="margin-bottom:6px;"><strong style="color:var(--ink-2);">ArcDeck</strong> — Narrative-Driven Paper-to-Slide Generation</p>
+  <p>Tarik Can Ozden, Sachidanand VS, Furkan Horoz, Ozgur Kara, Junho Kim, James M. Rehg</p>
+  <p style="margin-top:3px;font-size:.72rem;opacity:.6;">University of Illinois Urbana-Champaign &middot; Middle East Technical University</p>
+</footer>
+
+<div class="slide-modal" id="slideModal">
+  <div class="slide-modal-content">
+    <button class="slide-modal-close" onclick="closeSlideModal()" title="Close">&times;</button>
+    <img id="modalSlideImg" src="" alt="Slide" />
+    <div class="modal-progress" id="modalProgress"></div>
+    <div class="slide-modal-nav">
+      <button id="modalPrev" onclick="modalNav(-1)">&#8592;</button>
+      <span class="modal-counter"><span class="current-num" id="modalCurrent">1</span> / <span id="modalTotal">1</span></span>
+      <button id="modalNext" onclick="modalNav(1)">&#8594;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyBibtex() {
+    var text = document.getElementById('bibtexCode').textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.querySelector('.copy-btn');
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      btn.style.background = 'rgba(5,150,105,.4)';
+      btn.style.color = '#fff';
+      setTimeout(function() { btn.innerHTML = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
+    });
+  }
+
+  function switchTab(group, id, btn) {
+    document.querySelectorAll('[id^="' + group + '-"]').forEach(function(el) { el.classList.remove('active'); });
+    btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(group + '-' + id).classList.add('active');
+    btn.classList.add('active');
+    var pane = document.getElementById(group + '-' + id);
+    if (pane) pane.querySelectorAll('.slide-carousel:not([data-init])').forEach(initCarousel);
+  }
+
+  function slidePath(pdfPath, pageNum) {
+    var dir = pdfPath.replace(/^pdfs\//, 'slides/').replace(/\/[^/]+$/, '');
+    var base = pdfPath.replace(/^.*\//, '').replace(/\.pdf$/, '');
+    var padded = pageNum < 10 ? '0' + pageNum : '' + pageNum;
+    return dir + '/' + base + '-' + padded + '.png';
+  }
+
+  function initCarousel(el) {
+    if (el.hasAttribute('data-init')) return;
+    el.setAttribute('data-init', '1');
+
+    var pdfPath = el.getAttribute('data-pdf');
+    var totalPages = parseInt(el.getAttribute('data-pages'), 10);
+    var currentPage = 1;
+
+    var imgWrap = document.createElement('div');
+    imgWrap.className = 'slide-img-wrap';
+
+    var img = document.createElement('img');
+    img.src = slidePath(pdfPath, 1);
+    img.alt = 'Slide 1';
+    img.draggable = false;
+    imgWrap.appendChild(img);
+
+    var progress = document.createElement('div');
+    progress.className = 'slide-progress';
+    progress.style.width = (100 / totalPages) + '%';
+    imgWrap.appendChild(progress);
+
+    var expandBtn = document.createElement('button');
+    expandBtn.className = 'expand-btn';
+    expandBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Expand';
+    expandBtn.onclick = function(e) {
+      e.stopPropagation();
+      openSlideModal(pdfPath, totalPages, currentPage);
+    };
+    imgWrap.appendChild(expandBtn);
+    el.appendChild(imgWrap);
+
+    var nav = document.createElement('div');
+    nav.className = 'slide-nav';
+    var prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '&#8592;';
+    prevBtn.disabled = true;
+    var counter = document.createElement('span');
+    counter.className = 'slide-counter';
+    counter.innerHTML = '<span class="current-num">1</span> / ' + totalPages;
+    var nextBtn = document.createElement('button');
+    nextBtn.innerHTML = '&#8594;';
+    if (totalPages <= 1) nextBtn.disabled = true;
+    nav.appendChild(prevBtn);
+    nav.appendChild(counter);
+    nav.appendChild(nextBtn);
+    el.appendChild(nav);
+
+    function preload(page) {
+      if (page >= 1 && page <= totalPages) { var p = new Image(); p.src = slidePath(pdfPath, page); }
+    }
+
+    function goTo(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      img.src = slidePath(pdfPath, page);
+      img.alt = 'Slide ' + page;
+      counter.innerHTML = '<span class="current-num">' + page + '</span> / ' + totalPages;
+      progress.style.width = (page / totalPages * 100) + '%';
+      prevBtn.disabled = (page === 1);
+      nextBtn.disabled = (page === totalPages);
+      preload(page + 1);
+    }
+
+    prevBtn.onclick = function() { goTo(currentPage - 1); };
+    nextBtn.onclick = function() { goTo(currentPage + 1); };
+
+    el.tabIndex = 0;
+    el.style.outline = 'none';
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') { goTo(currentPage - 1); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { goTo(currentPage + 1); e.preventDefault(); }
+    });
+
+    preload(2);
+    preload(3);
+  }
+
+  var modalState = { pdfPath: '', total: 0, current: 0 };
+
+  function openSlideModal(pdfPath, total, startPage) {
+    modalState = { pdfPath: pdfPath, total: total, current: startPage };
+    updateModal();
+    document.getElementById('slideModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSlideModal() {
+    document.getElementById('slideModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function updateModal() {
+    document.getElementById('modalSlideImg').src = slidePath(modalState.pdfPath, modalState.current);
+    document.getElementById('modalCurrent').textContent = modalState.current;
+    document.getElementById('modalTotal').textContent = modalState.total;
+    document.getElementById('modalPrev').disabled = (modalState.current === 1);
+    document.getElementById('modalNext').disabled = (modalState.current === modalState.total);
+    document.getElementById('modalProgress').style.width = (modalState.current / modalState.total * 100) + '%';
+    if (modalState.current < modalState.total) { var p = new Image(); p.src = slidePath(modalState.pdfPath, modalState.current + 1); }
+  }
+
+  function modalNav(dir) {
+    var next = modalState.current + dir;
+    if (next >= 1 && next <= modalState.total) { modalState.current = next; updateModal(); }
+  }
+
+  function applyTheme(theme) {
+    var isLight = theme === 'light';
+    document.body.classList.toggle('light-mode', isLight);
+
+    var toggle = document.getElementById('themeToggle');
+    var text = document.getElementById('themeToggleText');
+    var icon = toggle.querySelector('i');
+
+    if (isLight) {
+      text.textContent = 'Dark mode';
+      icon.className = 'fa-solid fa-sun';
+    } else {
+      text.textContent = 'Light mode';
+      icon.className = 'fa-solid fa-moon';
+    }
+
+    var overviewImage = document.getElementById('overviewImage');
+    if (overviewImage) {
+      overviewImage.src = isLight
+        ? overviewImage.dataset.lightSrc
+        : overviewImage.dataset.darkSrc;
+    }
+
+    localStorage.setItem('arcdeck-theme', theme);
+  }
+
+  function initTheme() {
+    var saved = localStorage.getItem('arcdeck-theme');
+    var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+    var theme = saved || (prefersLight ? 'light' : 'dark');
+    applyTheme(theme);
+
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      var next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+      applyTheme(next);
+    });
+  }
+
+  document.getElementById('slideModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSlideModal();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (!document.getElementById('slideModal').classList.contains('open')) return;
+    if (e.key === 'Escape') closeSlideModal();
+    if (e.key === 'ArrowLeft') modalNav(-1);
+    if (e.key === 'ArrowRight') modalNav(1);
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initTheme();
+
+    document.querySelectorAll('.slide-carousel').forEach(function(el) {
+      var parent = el.closest('.tab-pane');
+      if (!parent || parent.classList.contains('active')) initCarousel(el);
+    });
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          entry.target.querySelectorAll('.slide-carousel:not([data-init])').forEach(initCarousel);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+    document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+  });
+</script>
+
+</body>
+</html>
