@@ -170,10 +170,16 @@
       gap: 36px;
       align-items: center;
     }
+    .hero-bottom-stacked {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: stretch;
+    }
     .hero .tagline {
       font-size: 1rem; color: var(--ink-2);
       line-height: 1.7; margin-bottom: 0;
-      text-align: justify;
+      text-align: center;
     }
     .hero-authors {
       display: flex; flex-wrap: wrap; gap: 4px 12px;
@@ -220,6 +226,13 @@
       border-color: rgba(15,23,42,.08);
     }
     .video-wrap video { width: 100%; display: block; }
+    .full-width-video {
+      width: 100%;
+    }
+    .full-width-video video {
+      width: 100%;
+      display: block;
+    }
     .video-label {
       position: absolute; top: 12px; left: 12px; z-index: 2;
       display: flex; align-items: center; gap: 5px;
@@ -453,8 +466,6 @@
       transition: width .2s; z-index: 2;
     }
 
-    .overview-img { width: 100%; display: block; }
-
     .features {
       display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
       margin-top: 40px;
@@ -552,7 +563,7 @@
   <div class="hero-inner">
     <div class="hero-top">
       <div>
-        <h1>Narrative-Driven Paper-to-Slide<br>Generation via <span class="hl">ArcDeck</span></h1>
+        <h1>Narrative-Driven Paper-to-Slide Generation via <span class="hl">ArcDeck</span></h1>
         <div class="hero-meta">
           <div class="hero-authors">
             <span class="author">Tarik Can Ozden<sup>*1</sup></span>
@@ -577,11 +588,12 @@
       </div>
       <img src="assets/logo.png" alt="ArcDeck" class="hero-logo" />
     </div>
-    <div class="hero-bottom">
+
+    <div class="hero-bottom hero-bottom-stacked">
       <div>
-        <p class="tagline">Turn any paper into a presentation with a clear, compelling narrative. Choose the duration, pick the audience, and generate with your preferred LLM model in one of 15 themes.</p>
+        <p class="tagline">Turn any paper into a presentation with a clear, compelling narrative. Choose the duration, pick the audience, and generate with your preferred LLM model.</p>
       </div>
-      <div class="video-wrap">
+      <div class="video-wrap full-width-video">
         <div class="video-label"><span class="dot"></span> Demo</div>
         <video controls autoplay muted loop playsinline>
           <source src="assets/demo.mp4" type="video/mp4">
@@ -594,39 +606,46 @@
 <div class="section-sep"></div>
 
 <section id="overview">
-<div class="section">
-  <div class="reveal">
-    <div class="section-head">
-      <h2>How ArcDeck works</h2>
-      <p>Paper in, slides out — in three steps.</p>
+  <div class="section">
+    <div class="reveal">
+      <div class="section-head">
+        <h2>How ArcDeck works</h2>
+        <p>Paper in, slides out — in three steps.</p>
+      </div>
     </div>
   </div>
-</div>
-<div>
-  <div class="reveal" style="max-width:1200px;margin:0 auto;">
-    <img src="assets/overview.png" alt="ArcDeck pipeline overview" class="overview-img" id="overviewImage" data-dark-src="assets/overview.png" data-light-src="assets/overview_light.png" />
-  </div>
-</div>
-<div class="section" style="padding-top:40px;">
 
-  <div class="reveal features">
-    <div class="feature">
-      <div class="feature-icon"><i class="fa-solid fa-book-open"></i></div>
-      <h3>Captures narrative</h3>
-      <p>Parses your paper's rhetorical structure to capture how the argument flows — not just what it says.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
-      <h3>Adapts to your needs</h3>
-      <p>5-minute lightning talk or 20-minute deep dive. General audience, expert researchers or any other audience. You choose.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon"><i class="fa-solid fa-globe"></i></div>
-      <h3>Works on any paper</h3>
-      <p>Biology, chemistry, physics, social sciences — not limited to ML/AI. Zero domain-specific tuning needed.</p>
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="reveal">
+      <div class="card">
+        <div class="card-body">
+          <div>
+            <div class="slide-carousel" data-pdf="pdfs/claude/arcdeck_claude.pdf" data-pages="22"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+
+  <div class="section" style="padding-top:40px;">
+    <div class="reveal features">
+      <div class="feature">
+        <div class="feature-icon"><i class="fa-solid fa-book-open"></i></div>
+        <h3>Captures narrative</h3>
+        <p>Parses your paper's rhetorical structure to capture how the argument flows — not just what it says.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><i class="fa-solid fa-sliders"></i></div>
+        <h3>Adapts to your needs</h3>
+        <p>5-minute lightning talk or 20-minute deep dive. General audience, expert researchers or any other audience. You choose.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><i class="fa-solid fa-globe"></i></div>
+        <h3>Works on any paper</h3>
+        <p>Biology, chemistry, physics, social sciences — not limited to ML/AI. Zero domain-specific tuning needed.</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <div class="section-sep"></div>
@@ -737,9 +756,9 @@
       </div></div>
     </div>
   </div>
-  </section>
-  
-  <div class="section-sep"></div>
+</section>
+
+<div class="section-sep"></div>
 
 <section id="customize">
 <div class="section-alt">
@@ -995,13 +1014,6 @@
     } else {
       text.textContent = 'Light mode';
       icon.className = 'fa-solid fa-moon';
-    }
-
-    var overviewImage = document.getElementById('overviewImage');
-    if (overviewImage) {
-      overviewImage.src = isLight
-        ? overviewImage.dataset.lightSrc
-        : overviewImage.dataset.darkSrc;
     }
 
     localStorage.setItem('arcdeck-theme', theme);
